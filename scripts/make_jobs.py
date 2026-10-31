@@ -1,6 +1,6 @@
 """Build a jobs.json for render.py from existing prompt files and reference images.
 
-圣诞珍珠画01 saves each prompt next to its reference image as
+pinshuai-prompt-diversify saves each prompt next to its reference image as
 <image stem>-提示词.txt, then -提示词-2.txt, -3 ... for later versions. With
 --images, each image is paired with the newest version of its prompt and is
 sent as that prompt's reference. --job pairs a prompt with images by hand.
@@ -96,7 +96,7 @@ def main():
     p.add_argument("--count", type=int, default=1, help="images per job (default 1, the trial)")
     p.add_argument("--size", help="fixed output size for all jobs, e.g. 1024x1536")
     p.add_argument("--model", help="model to write into jobs.json (render.py default otherwise)")
-    p.add_argument("--prompt-skill", default="圣诞珍珠画01",
+    p.add_argument("--prompt-skill", default="pinshuai-prompt-diversify",
                    help="skill that wrote the prompts; decides where prompt-side lessons are synced")
     p.add_argument("-o", "--output", help="jobs.json path (default: next to the first image, never overwritten)")
     args = p.parse_args()
