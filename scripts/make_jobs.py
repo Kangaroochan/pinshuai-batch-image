@@ -93,7 +93,7 @@ def main():
                    help="explicit pairing: a prompt file followed by zero or more images; repeatable")
     p.add_argument("--extra-ref", action="append", default=[],
                    help="image attached to every job that has images (e.g. product photo); text-only jobs stay text-only")
-    p.add_argument("--count", type=int, default=1, help="images per job (default 1, the trial)")
+    p.add_argument("--count", type=int, default=1, help="images per job (default 1)")
     p.add_argument("--size", help="fixed output size for all jobs, e.g. 1024x1536")
     p.add_argument("--model", help="model to write into jobs.json (render.py default otherwise)")
     p.add_argument("--prompt-skill", default="pinshuai-prompt-diversify",

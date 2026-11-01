@@ -1,4 +1,4 @@
 interface:
   display_name: "用现成提示词批量出图"
   short_description: "拿 圣诞珍珠画01 或 pinshuai-prompt-diversify 写好的提示词加参考图，通过中转站批量出效果图"
-  default_prompt: "使用 $pinshuai-batch-image，用这些参考图和旁边已经写好的提示词出图，先每条试出 1 张。"
+  default_prompt: "使用 $pinshuai-batch-image，用这些参考图和旁边已经写好的提示词出图，按 jobs 文件的张数一次出完，再逐张检查。"

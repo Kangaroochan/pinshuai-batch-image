@@ -11,9 +11,13 @@ parents, the current directory. The key is never printed or logged.
 
 Usage:
   python render.py jobs.json --dry-run
-  python render.py jobs.json --count 1          # trial: one image per job
   python render.py jobs.json                    # full batch, per-job counts
+  python render.py jobs.json --count 5          # five images per job
   python render.py jobs.json --only 2-做钻石画 --count 3
+
+Output: the images go in <jobs.json folder>/出图/<timestamp>/ (or --out), and
+everything else (run.json, later report.md, visual-review.json, lesson-sync.json)
+goes in its other/ subfolder, so the image folder holds only images.
 """
 import argparse
 import base64
@@ -168,9 +172,10 @@ def main():
         stream.reconfigure(encoding="utf-8")  # Windows consoles default to GBK; job names are Chinese
     p = argparse.ArgumentParser(description="Render jobs.json through an image relay")
     p.add_argument("jobs", help="path to jobs.json")
-    p.add_argument("--count", type=int, help="images per job, overrides jobs.json (use 1 for the trial)")
+    p.add_argument("--count", type=int, help="images per job, overrides jobs.json")
     p.add_argument("--only", action="append", help="run only this job name; repeatable")
-    p.add_argument("--out", help="output folder (default: <jobs.json folder>/出图/<timestamp>)")
+    p.add_argument("--out", help="image folder (default: <jobs.json folder>/出图/<timestamp>); "
+                                 "run.json goes in its other/ subfolder")
     p.add_argument("--model", help="override the model in jobs.json")
     p.add_argument("--retries", type=int, default=1, help="extra attempts on 429/5xx/network errors")
     p.add_argument("--concurrency", type=int, default=4)
@@ -257,6 +262,7 @@ def main():
     record = {
         "time": datetime.now().isoformat(timespec="seconds"),
         "jobs_file": str(jobs_path),
+        "images_dir": str(out_dir),  # images[].file is relative to this folder, not to run.json
         "endpoint_host": base_url.split("/")[2] if "//" in base_url else base_url,
         "prompt_skill": spec.get("prompt_skill"),  # None for jobs.json written before this field existed
         "settings": settings,
@@ -267,9 +273,11 @@ def main():
             "size": t["size"], **results[t["file_stem"]],
         } for t in tasks],
     }
-    (out_dir / "run.json").write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
+    side_dir = out_dir / "other"
+    side_dir.mkdir(exist_ok=True)
+    (side_dir / "run.json").write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
     ok = sum(r["status"] == "ok" for r in results.values())
-    print(f"done: {ok}/{len(tasks)} saved to {out_dir}")
+    print(f"done: {ok}/{len(tasks)} saved to {out_dir}; run.json in {side_dir}")
     sys.exit(0 if ok == len(tasks) else 1)
 
 

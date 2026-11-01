@@ -34,18 +34,20 @@ key 只从 `.env` 或环境变量读取，不会写进日志、`run.json` 或报
 ```powershell
 python scripts/make_jobs.py --images 1.webp 2.webp      # 配对提示词和参考图，写出 jobs.json
 python scripts/render.py jobs.json --dry-run            # 检查，不联网
-python scripts/render.py jobs.json --count 1            # 试跑，每条 1 张
-python scripts/render.py jobs.json --count 5            # 正式批量
+python scripts/render.py jobs.json                      # 按 jobs.json 里的张数一次出完
+python scripts/render.py jobs.json --count 5            # 每条 5 张
+python scripts/make_previews.py 出图/<时间戳>             # 看图前做同尺寸 JPEG 检查副本，并按套分组
 ```
 
-图片、`run.json`、`report.md` 和 `visual-review.json` 存在 `<jobs.json 所在文件夹>/出图/<时间戳>/`。
+图片存在 `<jobs.json 所在文件夹>/出图/<时间戳>/`，`run.json`、`report.md`、`visual-review.json` 等附带文件存在它的 `other/` 子文件夹。
 
 ## 文件
 
 - `SKILL.md`：skill 规则
 - `scripts/make_jobs.py`：配对提示词和参考图
 - `scripts/render.py`：调用中转站出图，有参考图走 `/images/edits`，没有走 `/images/generations`
-- `scripts/crop.ps1`：用户要求时裁出产品
+- `scripts/make_previews.py`：把出好的图转成同尺寸 JPEG 检查副本，按套分成检查组，避免看图时超过中转站的请求上限
+- `scripts/crop.ps1`：用户要求时裁出产品；检查时裁局部放大图（输出 .jpg 时存成 JPEG）
 - `references/lessons.md`：出图经验记录，里面是作者自己的出图记录，可以清空成模板再用
 
 ## 许可
