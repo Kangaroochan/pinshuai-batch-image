@@ -265,6 +265,7 @@ def main():
         "images_dir": str(out_dir),  # images[].file is relative to this folder, not to run.json
         "endpoint_host": base_url.split("/")[2] if "//" in base_url else base_url,
         "prompt_skill": spec.get("prompt_skill"),  # None for jobs.json written before this field existed
+        **({"template": spec["template"]} if spec.get("template") else {}),  # pinshuai-image-template: which template's lessons.md
         "settings": settings,
         "images": [{
             "job": t["name"], "file_stem": t["file_stem"], "prompt_file": str(t["prompt_path"]),

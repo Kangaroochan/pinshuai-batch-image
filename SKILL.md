@@ -1,11 +1,11 @@
 ---
 name: pinshuai-batch-image
-description: 用已经写好的提示词（圣诞珍珠画01、pinshuai-prompt-diversify 等提示词 skill 生成的 TXT，或 圣诞珍珠画01 写好的 jobs.json）加上参考图，通过 .env 里配置的第三方中转站批量出效果图。不重新写提示词。用户说"用写好的提示词出图""拿圣诞珍珠画01的提示词跑图""提示词有了，带参考图生成效果图""批量出图"时使用。用户对本 skill 出的图给反馈、要求复盘或记经验时也用本 skill，按"同步经验"一节把反馈分别记进出图经验和提示词 skill 的经验文件。默认不试跑，直接按 jobs 文件里的张数一次出完；图片单独放在出图文件夹里，其他附带文件放在它的 `other/` 子文件夹。还没有提示词时，圣诞珠钻画那套三张轮播先用 圣诞珍珠画01 写，别的参考图先用 pinshuai-prompt-diversify 写，不用本 skill。
+description: 用已经写好的提示词（pinshuai-image-template、pinshuai-prompt-diversify 等提示词 skill 生成的 TXT，或 pinshuai-image-template 写好的 jobs.json）加上参考图，通过 .env 里配置的第三方中转站批量出效果图。不重新写提示词。用户说"用写好的提示词出图""拿圣诞珍珠画01/02的提示词跑图""提示词有了，带参考图生成效果图""批量出图"时使用。用户对本 skill 出的图给反馈、要求复盘或记经验时也用本 skill，按"同步经验"一节把反馈分别记进出图经验和提示词 skill 的经验文件。默认不试跑，直接按 jobs 文件里的张数一次出完；图片单独放在出图文件夹里，其他附带文件放在它的 `other/` 子文件夹。还没有提示词时，有模板的轮播（圣诞珍珠画01、圣诞珍珠画02 等）先用 pinshuai-image-template 写，别的参考图先用 pinshuai-prompt-diversify 写，不用本 skill。
 ---
 
 # 用现成提示词批量出图
 
-输入是已经写好的提示词 TXT 和用户上传的参考图，输出是效果图。**本 skill 不写、不改提示词**，也不重新分析参考图，提示词由 圣诞珍珠画01、pinshuai-prompt-diversify 之类的 skill 事先生成。
+输入是已经写好的提示词 TXT 和用户上传的参考图，输出是效果图。**本 skill 不写、不改提示词**，也不重新分析参考图，提示词由 pinshuai-image-template、pinshuai-prompt-diversify 之类的 skill 事先生成。
 
 `<本 skill 目录>` 指本 SKILL.md 所在的文件夹。
 
@@ -16,13 +16,13 @@ description: 用已经写好的提示词（圣诞珍珠画01、pinshuai-prompt-d
 - **不打印、复制、写出 key 的值**，包括日志、报告和回复。
 - **默认直接正式批量，不单独试跑**（2026-11-01 用户要求）：一次跑完全部任务，出完逐张检查。用户本次明确要求先试跑时，才先用 `--only` 跑一部分，等用户看过再跑剩下的。
 - **每张图都是一次付费请求。** 出图前在回复里写明总张数。已经成功的图不重新提交；单张失败最多重试 1 次（脚本默认），仍失败就记录原因，不要反复重跑。
-- **参考图按用户上传的原样使用**，不裁剪、不拼接、不换成别的图。用户本次明确要求裁出产品时，才用 `scripts/crop.ps1` 裁（见文末）。圣诞珍珠画01 的 jobs 文件里写好的参考图（批次文件夹里的 `参考图/`）算用户指定的，原样使用。
+- **参考图按用户上传的原样使用**，不裁剪、不拼接、不换成别的图。用户本次明确要求裁出产品时，才用 `scripts/crop.ps1` 裁（见文末）。pinshuai-image-template 的 jobs 文件里写好的参考图（批次文件夹里的 `参考图/`）算用户指定的，原样使用。
 
 ## 输入
 
 - **参考图**：用户本次上传或指定路径的图片。上传的 skill 文件、TXT 不算参考图。
 - **提示词**：三种来源，按这个顺序找：
-  1. **圣诞珍珠画01 的批次文件夹**（里面有 `batch.json`、`jobs.json`）：直接用这个 jobs 文件，提示词和参考图已经配好，跳过步骤一，不用 `make_jobs.py` 重新配对，也不加 `--extra-ref`。
+  1. **pinshuai-image-template 的批次文件夹**（里面有 `batch.json`、`jobs.json`；2026-11-02 合并前由 圣诞珍珠画01、圣诞珍珠画02 生成的批次也是）：直接用这个 jobs 文件，提示词和参考图已经配好，跳过步骤一，不用 `make_jobs.py` 重新配对，也不加 `--extra-ref`。
   2. 用户明确指定的提示词文件或文件夹，用用户指定的。
   3. 没指定时，在每张参考图所在文件夹按 pinshuai-prompt-diversify 的命名找：`<参考图文件名，不含扩展名>-提示词.txt`，有 `-提示词-2.txt`、`-3.txt` 等多个版本时**默认用编号最大的最新版**，并在回复里说明用了哪个版本、还有哪些旧版本。
 - 用户直接把提示词文字贴在对话里时，原样存成 UTF-8 的 TXT（放参考图旁边，命名同上，不覆盖已有文件），再用这个文件出图。
@@ -50,7 +50,7 @@ description: 用已经写好的提示词（圣诞珍珠画01、pinshuai-prompt-d
 python "<本 skill 目录>/scripts/make_jobs.py" --images "D:/素材/圣诞/2-做钻石画.webp" "D:/素材/圣诞/3-挂在树上.webp"
 ```
 
-提示词不是 pinshuai-prompt-diversify 写的时候，加 `--prompt-skill <skill 名>`（默认 `pinshuai-prompt-diversify`）。它会写进 `jobs.json` 和 `run.json`，同步经验时用它决定把提示词那边的经验记到哪个 skill。圣诞珍珠画01 的批次不走这一步，它的 jobs 文件里已经写了 `prompt_skill`。
+提示词不是 pinshuai-prompt-diversify 写的时候，加 `--prompt-skill <skill 名>`（默认 `pinshuai-prompt-diversify`）。它会写进 `jobs.json` 和 `run.json`，同步经验时用它决定把提示词那边的经验记到哪个 skill。pinshuai-image-template 的批次不走这一步，它的 jobs 文件里已经写了 `prompt_skill` 和 `template`。
 
 常用写法：
 
@@ -73,7 +73,7 @@ python "<本 skill 目录>/scripts/make_jobs.py" --images "D:/素材/圣诞/2-�
    ```
    python "<本 skill 目录>/scripts/render.py" "<jobs.json 路径>"
    ```
-   默认 4 张并发，`--concurrency` 可调；只跑某几条用 `--only <名字>`（可重复）。圣诞珍珠画01 的批次跑它的 `jobs.json`，不加 `--count`：每套每张画面的提示词本来就不同，每条出 1 张。2026-11-01 之前生成的批次分成 `jobs-试跑.json` 和 `jobs-正式.json`，两个都要跑，出图文件夹会是两个，跑之前告诉用户。
+   默认 4 张并发，`--concurrency` 可调；只跑某几条用 `--only <名字>`（可重复）。pinshuai-image-template 的批次跑它的 `jobs.json`，不加 `--count`：每套每张画面的提示词本来就不同，每条出 1 张。2026-11-01 之前生成的批次分成 `jobs-试跑.json` 和 `jobs-正式.json`，两个都要跑，出图文件夹会是两个，跑之前告诉用户。
    图片存在 `<jobs.json 所在文件夹>/出图/<时间戳>/`，文件名是 `<任务名>-01.png`；`run.json`（每张用的提示词文件、SHA-256、参考图、状态、尝试次数）存在它的 `other/` 子文件夹。出图文件夹里只放图片。
 3. 中转站偶尔返回 HTTP 500 `do_request_failed`，脚本会自动重试 1 次。仍失败的，用 `--only <名字>` 单独补跑那一条，不要整批重跑。401/403 说明 key 或地址有问题，停下告诉用户检查 `.env`。
 4. 看图检查（步骤三）：先用 `make_previews.py` 做检查副本，只看副本；每条出 1 张时逐张检查；每条出多张时每条至少抽查 2 张，没抽查的写"未检查"。发现普遍问题（同一处产品或文字反复画错）就停下报告，不付费重出、不加量。
@@ -166,10 +166,11 @@ python "<本 skill 目录>/scripts/make_previews.py" "<出图文件夹>"
     }
   ],
   "repair_or_rerender_started": false,
-  "prompt_skill": "圣诞珍珠画01",
+  "prompt_skill": "pinshuai-image-template",
+  "template": "圣诞珍珠画01",
   "lessons_synced": [
     {"file": "<本 skill 目录>/references/lessons.md", "added": ["R001"], "updated": []},
-    {"file": "<提示词 skill 目录>/references/lessons.md", "added": [], "updated": ["L008"]}
+    {"file": "<提示词 skill 目录>/templates/圣诞珍珠画01/lessons.md", "added": [], "updated": ["L008"]}
   ]
 }
 ```
@@ -180,7 +181,7 @@ python "<本 skill 目录>/scripts/make_previews.py" "<出图文件夹>"
 - `refs_hash_match`：每张参考图现在的 SHA-256 和 `run.json` 里的 `ref_sha256` 一致。三个 `_match` 有一个是 false，就在 report.md 的完整性一节写明是哪个文件。
 - 失败的图也要列一条：`file` 写 `null`，`visual_status` 写 `not_reviewed`，`product`、`text`、`emoji`、`ui`、`reference_similarity`、`uncertain` 写空字符串，另加 `"error"` 写失败原因。
 - `product`、`text` 等检查字段的文字和 report.md 检查表里的写法一致。
-- `prompt_skill` 取自 `run.json`。`lessons_synced` 写实际的绝对路径，同步完再补上；和 report.md 的"经验同步"一节一致。
+- `prompt_skill`、`template` 取自 `run.json`（旧的出图没有 `template` 就不写）。`lessons_synced` 写实际的绝对路径，同步完再补上；和 report.md 的"经验同步"一节一致。
 
 ## 同步经验
 
@@ -189,7 +190,7 @@ python "<本 skill 目录>/scripts/make_previews.py" "<出图文件夹>"
 | 经验文件 | 记什么 | 谁读 |
 |---|---|---|
 | `<本 skill 目录>/references/lessons.md`（编号 R001 起） | 出图这边：参考图选哪张、带整张截图/裁图/不带、配对、尺寸比例、模型和参数、中转站报错、耗时 | 本 skill 每次配对出图前 |
-| 提示词 skill 的经验文件（圣诞珍珠画01 和 pinshuai-prompt-diversify 都是各自的 `references/lessons.md`，编号 L001 起） | 提示词这边：文字和 emoji 写法、变量和选项、固定层写了什么、负面约束有没有生效、不该出现的产品有没有画出来、和原图太像是不是提示词照抄了原图 | 提示词 skill 每次写提示词前 |
+| 提示词 skill 的经验文件（pinshuai-prompt-diversify 是它的 `references/lessons.md`；pinshuai-image-template 每个模板一份，在 `templates/<模板名>/lessons.md`；编号都从 L001 起） | 提示词这边：文字和 emoji 写法、变量和选项、固定层写了什么、负面约束有没有生效、不该出现的产品有没有画出来、和原图太像是不是提示词照抄了原图 | 提示词 skill 每次写提示词前 |
 
 ### 两种同步方式
 
@@ -220,7 +221,7 @@ python "<本 skill 目录>/scripts/make_previews.py" "<出图文件夹>"
 
 ### 怎么分流
 
-1. 确定提示词 skill：看 `run.json` 的 `prompt_skill`；没有这个字段（旧的出图）时，按提示词文件名和对话判断，判断不了就问用户。名字的历史：2026-10-31 白天 `batch-prompt-diversify` 改名 `圣诞珍珠画01`；同日晚上这个通用 skill 又改名 `pinshuai-prompt-diversify`，`圣诞珍珠画01` 改成从它复制出来的三张轮播模板。那之前的出图都是这套圣诞珠钻画轮播，`prompt_skill` 写 `batch-prompt-diversify` 或 `圣诞珍珠画01` 的，经验都记进 圣诞珍珠画01；只有写 `pinshuai-prompt-diversify` 的记进 pinshuai-prompt-diversify。圣诞珍珠画01 的批次做完整复盘时，对照批次文件夹里的 `抽取明细.csv` 看每张图抽到了什么。
+1. 确定提示词 skill：看 `run.json` 的 `prompt_skill`；没有这个字段（旧的出图）时，按提示词文件名和对话判断，判断不了就问用户。名字的历史：2026-10-31 白天 `batch-prompt-diversify` 改名 `圣诞珍珠画01`；同日晚上这个通用 skill 又改名 `pinshuai-prompt-diversify`，`圣诞珍珠画01` 改成从它复制出来的三张轮播模板。2026-11-02 圣诞珍珠画01、圣诞珍珠画02 两个 skill 合并进 `pinshuai-image-template`，变成它的两个模板。按 `prompt_skill` 分流：写 `pinshuai-image-template` 的，经验记进 `<pinshuai-image-template 目录>/templates/<run.json 的 template>/lessons.md`；写 `batch-prompt-diversify` 或 `圣诞珍珠画01` 的（旧的出图），记进 `templates/圣诞珍珠画01/lessons.md`；写 `圣诞珍珠画02` 的，记进 `templates/圣诞珍珠画02/lessons.md`；只有写 `pinshuai-prompt-diversify` 的记进 pinshuai-prompt-diversify。`template` 是模板文件夹里没有的名字（复制出来的模板副本）时，看批次 `batch.json` 的 `template` 路径判断是从哪个模板复制的，判断不了就问用户。pinshuai-image-template 的批次做完整复盘时，读它 SKILL.md 的"经验学习"一节和模板的 `说明.md`，对照批次文件夹里的 `抽取明细.csv` 看每张图抽到了什么。
 2. 对每条要记的内容（日常同步按"日常同步只记什么"；完整复盘时还包括有效的写法），判断是提示词这边还是出图这边造成的，按上表记进对应的文件。两边都有关系时，比如提示词写了"不要出现轮播圆点"，但带整张截图出图后还是画了出来，两个文件各记一条，互相写上对方的编号，原因写"猜测"。
 3. 提示词 skill 没有经验文件时（比如 batch-image-prompt），提示词那边的经验也记在本 skill 的经验文件里，条目标题前标 `[提示词:<skill 名>]`，并在回复里说明；不要替别的 skill 新建经验文件。
 

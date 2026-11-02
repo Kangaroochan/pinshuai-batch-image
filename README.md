@@ -1,6 +1,6 @@
 # pinshuai-batch-image
 
-用已经写好的提示词 TXT 加上参考图，通过 OpenAI 兼容的第三方中转站批量出效果图。不重新写提示词：提示词由 [圣诞珍珠画01](https://github.com/Kangaroochan/christmas-pearl-painting-01)（圣诞珠钻画三张轮播模板，直接写好 jobs 文件）或 [pinshuai-prompt-diversify](https://github.com/Kangaroochan/pinshuai-prompt-diversify)（通用提示词多样化）之类的提示词 skill 事先生成。
+用已经写好的提示词 TXT 加上参考图，通过 OpenAI 兼容的第三方中转站批量出效果图。不重新写提示词：提示词由 [pinshuai-image-template](https://github.com/Kangaroochan/pinshuai-image-template)（轮播批量模板库，含 圣诞珍珠画01、圣诞珍珠画02，直接写好 jobs 文件）或 [pinshuai-prompt-diversify](https://github.com/Kangaroochan/pinshuai-prompt-diversify)（通用提示词多样化）之类的提示词 skill 事先生成。
 
 默认每条提示词先试出 1 张，看图检查后再按指定张数批量出。出图后的检查结果和反馈会分别记进本 skill 和提示词 skill 各自的经验文件，下次出图、下次写提示词前会先读。
 
