@@ -15,9 +15,13 @@ Usage:
   python render.py jobs.json --count 5          # five images per job
   python render.py jobs.json --only 2-做钻石画 --count 3
 
-Output: the images go in <jobs.json folder>/出图/<timestamp>/ (or --out), and
-everything else (run.json, later report.md, visual-review.json, lesson-sync.json)
-goes in its other/ subfolder, so the image folder holds only images.
+Output: a jobs.json inside a render folder's other/ (the layout pinshuai-image-template
+and pinshuai-prompt-diversify write) puts the images in that render folder itself;
+any other jobs.json puts them in <jobs.json folder>/出图/<timestamp>/. --out overrides
+both. Everything else (run.json, later report.md, visual-review.json, lesson-sync.json)
+goes in the image folder's other/ subfolder, so the image folder holds only images and
+other/. Rerunning into the same folder never overwrites: image numbers continue after
+the ones already there, and the record becomes run-2.json, run-3.json ...
 """
 import argparse
 import base64
@@ -174,8 +178,8 @@ def main():
     p.add_argument("jobs", help="path to jobs.json")
     p.add_argument("--count", type=int, help="images per job, overrides jobs.json")
     p.add_argument("--only", action="append", help="run only this job name; repeatable")
-    p.add_argument("--out", help="image folder (default: <jobs.json folder>/出图/<timestamp>); "
-                                 "run.json goes in its other/ subfolder")
+    p.add_argument("--out", help="image folder (default: the folder holding other/jobs.json, else "
+                                 "<jobs.json folder>/出图/<timestamp>); run.json goes in its other/ subfolder")
     p.add_argument("--model", help="override the model in jobs.json")
     p.add_argument("--retries", type=int, default=1, help="extra attempts on 429/5xx/network errors")
     p.add_argument("--concurrency", type=int, default=4)
@@ -202,8 +206,16 @@ def main():
     if problems:
         sys.exit("jobs.json problems:\n  " + "\n  ".join(problems))
 
+    if args.out:
+        out_dir = Path(args.out).resolve()
+    elif jobs_path.parent.name == "other":  # <render folder>/other/jobs.json: images go in the render folder
+        out_dir = jobs_path.parent.parent
+    else:
+        out_dir = jobs_path.parent / "出图" / datetime.now().strftime("%Y%m%d_%H%M%S")
+
     total = sum(j["count"] for j in jobs)
     print(f"model={settings['model']} quality={settings['quality']} jobs={len(jobs)} images={total}")
+    print(f"images -> {out_dir}")
     for j in jobs:
         mode = f"edits, {len(j['refs'])} ref(s)" if j["refs"] else "generations, no ref"
         print(f"  {j['name']}: {j['count']} x {j['size']} via {mode}; prompt sha256 "
@@ -219,14 +231,17 @@ def main():
         sys.exit("OPENAI_API_KEY not set (environment or .env)")
     base_url = (os.environ.get("OPENAI_BASE_URL") or "https://api.openai.com/v1").rstrip("/")
 
-    out_dir = Path(args.out).resolve() if args.out else \
-        jobs_path.parent / "出图" / datetime.now().strftime("%Y%m%d_%H%M%S")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     ref_hashes = {r: sha256(r.read_bytes()) for j in jobs for r in j["refs"]}
+    taken = {f.stem for f in out_dir.iterdir() if f.is_file()}  # a rerun numbers on, never overwrites
     tasks = []
     for j in jobs:
-        for k in range(1, j["count"] + 1):
+        k = 0
+        for _ in range(j["count"]):
+            k += 1
+            while f"{j['name']}-{k:02d}" in taken:
+                k += 1
             tasks.append({**j, "file_stem": f"{j['name']}-{k:02d}"})
 
     def redact(text):
@@ -276,9 +291,12 @@ def main():
     }
     side_dir = out_dir / "other"
     side_dir.mkdir(exist_ok=True)
-    (side_dir / "run.json").write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
+    run_file, n = side_dir / "run.json", 2
+    while run_file.exists():
+        run_file, n = side_dir / f"run-{n}.json", n + 1
+    run_file.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
     ok = sum(r["status"] == "ok" for r in results.values())
-    print(f"done: {ok}/{len(tasks)} saved to {out_dir}; run.json in {side_dir}")
+    print(f"done: {ok}/{len(tasks)} saved to {out_dir}; {run_file.name} in {side_dir}")
     sys.exit(0 if ok == len(tasks) else 1)
 
 

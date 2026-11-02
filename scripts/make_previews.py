@@ -16,7 +16,7 @@ Writes into <render folder>/other/:
 Encoding uses the Windows imaging codecs through PowerShell, so no Pillow is needed.
 
 Usage:
-  python make_previews.py D:/任务/批次/出图/20261101_150528
+  python make_previews.py D:/素材/圣诞/出图-20261102_150000      # the folder holding the images
   python make_previews.py <render folder> --budget-mb 8 --quality 85
 """
 import argparse
@@ -114,7 +114,7 @@ def main():
     for stream in (sys.stdout, sys.stderr):
         stream.reconfigure(encoding="utf-8")  # Windows consoles default to GBK; file names are Chinese
     p = argparse.ArgumentParser(description="Make JPEG review copies of a render folder")
-    p.add_argument("folder", help="render folder (出图/<timestamp>)")
+    p.add_argument("folder", help="render folder (the one holding the images and other/)")
     p.add_argument("--quality", type=int, default=90, help="JPEG quality 1-100 (default 90)")
     p.add_argument("--budget-mb", type=float, default=12, help="max copy MiB per review session (default 12)")
     args = p.parse_args()

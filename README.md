@@ -27,19 +27,19 @@ key 只从 `.env` 或环境变量读取，不会写进日志、`run.json` 或报
 
 ## 使用
 
-在 Codex 里调用 `$pinshuai-batch-image`，给出参考图，提示词放在参考图旁边，命名为 `<参考图名>-提示词.txt`（多个版本 `-提示词-2.txt`、`-3.txt` 时默认用最新版）。
+在 Codex 里调用 `$pinshuai-batch-image`，给出参考图，提示词放在参考图所在文件夹里出图文件夹的 `other/`（旧写法在参考图旁边），命名为 `<参考图名>-提示词.txt`（多个版本 `-提示词-2.txt`、`-3.txt` 时默认用最新版）。
 
 脚本也可以单独用：
 
 ```powershell
-python scripts/make_jobs.py --images 1.webp 2.webp      # 配对提示词和参考图，写出 jobs.json
+python scripts/make_jobs.py --images 1.webp 2.webp --prompts-dir 出图-<时间>/other   # 配对提示词和参考图，写出 jobs.json
 python scripts/render.py jobs.json --dry-run            # 检查，不联网
 python scripts/render.py jobs.json                      # 按 jobs.json 里的张数一次出完
 python scripts/render.py jobs.json --count 5            # 每条 5 张
-python scripts/make_previews.py 出图/<时间戳>             # 看图前做同尺寸 JPEG 检查副本，并按套分组
+python scripts/make_previews.py 出图-<时间>              # 看图前做同尺寸 JPEG 检查副本，并按套分组
 ```
 
-图片存在 `<jobs.json 所在文件夹>/出图/<时间戳>/`，`run.json`、`report.md`、`visual-review.json` 等附带文件存在它的 `other/` 子文件夹。
+出图文件夹建在参考图所在的文件夹里。jobs.json 在出图文件夹的 `other/` 里时，图片存在这个出图文件夹第一层（旧批次存在 `<jobs.json 所在文件夹>/出图/<时间戳>/`）；`run.json`、`report.md`、`visual-review.json` 等附带文件都在它的 `other/` 子文件夹。补跑不覆盖已有的图。
 
 ## 文件
 

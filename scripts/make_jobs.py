@@ -1,14 +1,18 @@
 """Build a jobs.json for render.py from existing prompt files and reference images.
 
-pinshuai-prompt-diversify saves each prompt next to its reference image as
-<image stem>-提示词.txt, then -提示词-2.txt, -3 ... for later versions. With
---images, each image is paired with the newest version of its prompt and is
-sent as that prompt's reference. --job pairs a prompt with images by hand.
+pinshuai-prompt-diversify saves each prompt as <image stem>-提示词.txt (then
+-提示词-2.txt, -3 ... for later versions) in <render folder>/other/, where the
+render folder sits in the reference image's folder; older prompts sit next to
+the image. With --images, each image is paired with the newest version of its
+prompt (looked up in --prompts-dir, else next to the image) and is sent as that
+prompt's reference. jobs.json goes next to the prompts, so a render folder's
+other/jobs.json makes render.py put the images in that render folder. --job pairs a prompt with images by hand.
 Output size follows the first reference image's aspect ratio unless --size
 is given. Nothing is sent to the network.
 
 Usage:
-  python make_jobs.py --images D:/图/1-四宫格.webp D:/图/2-做钻石画.webp
+  python make_jobs.py --images D:/图/1-四宫格.webp D:/图/2-做钻石画.webp --prompts-dir D:/图/出图-20261102_150000/other
+  python make_jobs.py --images D:/图/1-四宫格.webp D:/图/2-做钻石画.webp      # old layout: prompts next to images
   python make_jobs.py --images 2-做钻石画.webp --extra-ref 产品裁图/挂饰.png
   python make_jobs.py --job 3-挂在树上-提示词-2.txt 3-挂在树上.webp --count 5
   python make_jobs.py --job 1-四宫格-提示词.txt        # no image: text-only
@@ -62,11 +66,11 @@ def size_for(path):
     return size, f"{dims[0]}x{dims[1]}"
 
 
-def find_prompts(image):
-    """All prompt versions for an image, oldest first."""
+def find_prompts(image, folder=None):
+    """All prompt versions for an image, oldest first, from folder (default: next to the image)."""
     pattern = re.compile(rf"^{re.escape(image.stem)}-提示词(?:-(\d+))?\.txt$")
     found = []
-    for f in image.parent.iterdir():
+    for f in (folder or image.parent).iterdir():
         m = pattern.match(f.name)
         if m and f.is_file():
             found.append((int(m.group(1) or 1), f))
@@ -89,6 +93,8 @@ def main():
         stream.reconfigure(encoding="utf-8")
     p = argparse.ArgumentParser(description="Pair existing prompts with reference images into jobs.json")
     p.add_argument("--images", nargs="+", default=[], help="reference images; each finds its own <stem>-提示词*.txt")
+    p.add_argument("--prompts-dir", help="folder holding the --images prompts, e.g. <render folder>/other "
+                                         "(default: next to each image); jobs.json goes here too")
     p.add_argument("--job", nargs="+", action="append", default=[], metavar="PROMPT [IMAGE ...]",
                    help="explicit pairing: a prompt file followed by zero or more images; repeatable")
     p.add_argument("--extra-ref", action="append", default=[],
@@ -98,7 +104,8 @@ def main():
     p.add_argument("--model", help="model to write into jobs.json (render.py default otherwise)")
     p.add_argument("--prompt-skill", default="pinshuai-prompt-diversify",
                    help="skill that wrote the prompts; decides where prompt-side lessons are synced")
-    p.add_argument("-o", "--output", help="jobs.json path (default: next to the first image, never overwritten)")
+    p.add_argument("-o", "--output", help="jobs.json path (default: in --prompts-dir, else next to the first image; "
+                                          "never overwritten)")
     args = p.parse_args()
 
     if not args.images and not args.job:
@@ -108,13 +115,16 @@ def main():
 
     problems, pairs = [], []
     extra = [Path(r).resolve() for r in args.extra_ref]
+    prompts_dir = Path(args.prompts_dir).resolve() if args.prompts_dir else None
+    if prompts_dir and not prompts_dir.is_dir():
+        sys.exit(f"--prompts-dir not found: {prompts_dir}")
     for img in map(lambda s: Path(s).resolve(), args.images):
         if not img.is_file():
             problems.append(f"image not found: {img}")
             continue
-        versions = find_prompts(img)
+        versions = find_prompts(img, prompts_dir)
         if not versions:
-            problems.append(f"no prompt for {img.name}: expected {img.stem}-提示词.txt in {img.parent}")
+            problems.append(f"no prompt for {img.name}: expected {img.stem}-提示词.txt in {prompts_dir or img.parent}")
             continue
         pairs.append((versions[-1], [img], versions[:-1]))
     for entry in args.job:
@@ -136,9 +146,10 @@ def main():
     if args.output:
         out = Path(args.output).resolve()
     else:
-        out, n = first.parent / "jobs.json", 2
+        folder = prompts_dir or first.parent
+        out, n = folder / "jobs.json", 2
         while out.exists():
-            out, n = first.parent / f"jobs-{n}.json", n + 1
+            out, n = folder / f"jobs-{n}.json", n + 1
     if out.exists() and args.output:
         sys.exit(f"{out} already exists; pick another -o")
     base = out.parent
