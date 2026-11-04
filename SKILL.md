@@ -3,7 +3,7 @@ name: pinshuai-batch-image
 description: 用已经写好的提示词（pinshuai-image-template、pinshuai-prompt-diversify 等提示词 skill 生成的 TXT，或 pinshuai-image-template 写好的 jobs.json）加上参考图，通过 .env 里配置的第三方中转站批量出效果图。不重新写提示词。用户说"用写好的提示词出图""拿圣诞珍珠画01/02的提示词跑图""提示词有了，带参考图生成效果图""批量出图"时使用；用户上传参考图、在输入框里直接写了想要的画面让出图时也用。用户对本 skill 出的图给反馈、要求复盘或记经验时也用本 skill，按"同步经验"一节把反馈分别记进出图经验和提示词 skill 的经验文件。默认不试跑，直接按 jobs 文件里的张数一次出完；出图文件夹建在用户上传参考图所在的文件夹里，第一层只放图片和 `other/`，这次生成的其他附带文件都在 `other/`。找不到现成的提示词 TXT 或 jobs.json 时，以用户在输入框里输入的内容为主：把用户写的画面描述原样存成提示词出图，不另外写提示词；用户要的是有模板的轮播批量（圣诞珍珠画01、圣诞珍珠画02 等）时先用 pinshuai-image-template 写，用户要求写成多样化的多条提示词时先用 pinshuai-prompt-diversify 写。
 ---
 
-# 用现成提示词批量出图
+# 批量出图
 
 输入是已经写好的提示词 TXT 和用户上传的参考图，输出是效果图。**本 skill 不写、不改提示词**，也不重新分析参考图，提示词由 pinshuai-image-template、pinshuai-prompt-diversify 之类的 skill 事先生成；找不到现成的提示词时，以用户在输入框里输入的内容为提示词（见"输入"一节第 4 种来源）。
 
